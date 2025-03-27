@@ -601,8 +601,10 @@ export async function getPage(handle: string): Promise<VercelPage> {
   const entityId = await getEntityIdByHandle(handle);
 
   if (!entityId) {
-    notFound();
+    // Throw an error with detailed info instead of calling notFound()
+    throw new Error(`Entity ID not found for handle: ${handle}. Check that the handle is valid and that your BigCommerce API is returning data for it.`);
   }
+
 
   const res = await bigCommerceFetch<BigCommercePageOperation>({
     query: getPageQuery,
@@ -611,6 +613,10 @@ export async function getPage(handle: string): Promise<VercelPage> {
     }
   });
 
+  if (!res.body.data.site.content.page) {
+    throw new Error(`Page data is missing for entityId: ${entityId}`);
+  }
+  
   return bigCommerceToVercelPageContent(res.body.data.site.content.page);
 }
 
