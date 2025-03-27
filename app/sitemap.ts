@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 import { getCollections, getPages, getProducts } from 'lib/bigcommerce';
 import { validateEnvironmentVariables } from 'lib/utils';
 import { MetadataRoute } from 'next';

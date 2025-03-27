@@ -86,21 +86,28 @@ const getEntityIdByHandle = async (entityHandle: string) => {
 };
 
 export async function bigCommerceFetch<T>({
-  query,
-  variables,
-  headers,
-  cache = 'force-cache'
-}: {
+                                            query,
+                                            variables,
+                                            headers,
+                                            cache = 'force-cache'
+                                          }: {
   query: string;
-  variables?: ExtractVariables<T>;
+  variables?: object;
   headers?: HeadersInit;
   cache?: RequestCache;
 }): Promise<{ status: number; body: T } | never> {
+  const endpoint = `${domain}.${BIGCOMMERCE_GRAPHQL_API_ENDPOINT}`; // or however your endpoint is defined
   try {
+    console.log("Requesting GraphQL endpoint:", endpoint);
+    console.log("Using token (first 10 chars):", process.env.BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN?.slice(0, 10) + "...");
+    console.log("Query:", query);
+    console.log("Variables:", variables);
+
     const result = await fetch(endpoint, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
+        // IMPORTANT: For public data, you may need the Storefront API token instead.
         Authorization: `Bearer ${process.env.BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN}`,
         'Content-Type': 'application/json',
         ...headers
@@ -112,9 +119,15 @@ export async function bigCommerceFetch<T>({
       cache
     });
 
-    const body = await result.json();
+    if (!result.ok) {
+      const errorText = await result.text();
+      console.error("Fetch failed with status", result.status, errorText);
+      throw new Error(`HTTP ${result.status}: ${errorText}`);
+    }
 
+    const body = await result.json();
     if (body.errors) {
+      console.error("GraphQL returned errors:", body.errors);
       throw body.errors[0];
     }
 
