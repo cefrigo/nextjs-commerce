@@ -5,7 +5,8 @@ module.exports = {
     ignoreDuringBuilds: true
   },
   experimental: {
-    serverActions: true
+    serverActions: {},
+    missingSuspenseWithCSRBailout: false
   },
   images: {
     remotePatterns: [

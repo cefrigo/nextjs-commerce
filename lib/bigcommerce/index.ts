@@ -1,5 +1,4 @@
 import { isVercelCommerceError } from 'lib/type-guards';
-import { notFound } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
 import { BIGCOMMERCE_GRAPHQL_API_ENDPOINT } from './constants';
 
@@ -102,6 +101,7 @@ export async function bigCommerceFetch<T>({
     console.log("Using token (first 10 chars):", process.env.BIGCOMMERCE_CUSTOMER_IMPERSONATION_TOKEN?.slice(0, 10) + "...");
     console.log("Query:", query);
     console.log("Variables:", variables);
+    console.log("Headers", headers);
 
     const result = await fetch(endpoint, {
       method: 'POST',
@@ -135,6 +135,7 @@ export async function bigCommerceFetch<T>({
       status: result.status,
       body
     };
+
   } catch (e) {
     if (isVercelCommerceError(e)) {
       throw {
@@ -602,7 +603,7 @@ export async function getPage(handle: string): Promise<VercelPage> {
 
   if (!entityId) {
     // Throw an error with detailed info instead of calling notFound()
-    throw new Error(`Entity ID not found for handle: ${handle}. Check that the handle is valid and that your BigCommerce API is returning data for it.`);
+    console.error(`Entity ID not found for handle: ${handle}. Check that the handle is valid and that your BigCommerce API is returning data for it.`);
   }
 
 
@@ -614,7 +615,7 @@ export async function getPage(handle: string): Promise<VercelPage> {
   });
 
   if (!res.body.data.site.content.page) {
-    throw new Error(`Page data is missing for entityId: ${entityId}`);
+    console.error(`Page data is missing for entityId: ${entityId}`);
   }
 
   return bigCommerceToVercelPageContent(res.body.data.site.content.page);
