@@ -616,7 +616,7 @@ export async function getPage(handle: string): Promise<VercelPage> {
   if (!res.body.data.site.content.page) {
     throw new Error(`Page data is missing for entityId: ${entityId}`);
   }
-  
+
   return bigCommerceToVercelPageContent(res.body.data.site.content.page);
 }
 
