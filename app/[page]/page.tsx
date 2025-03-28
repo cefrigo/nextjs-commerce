@@ -1,67 +1,49 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+
 import Prose from 'components/prose';
 import { getPage } from 'lib/bigcommerce';
 import { notFound } from 'next/navigation';
 
 export const runtime = 'edge';
-export const revalidate = 43200;
-export const dynamic = 'force-dynamic';
 
-type PageParams = {
-  params: {
-    page: string;
-  };
-};
+export const revalidate = 43200; // 12 hours in seconds
 
-export async function generateMetadata(
-    { params }: PageParams
-): Promise<Metadata | undefined> {
-  try {
-    const page = await getPage(params.page);
+export async function generateMetadata({
+                                         params
+                                       }: {
+  params: { page: string };
+}): Promise<Metadata> {
+  const page = await getPage(params.page);
 
-    if (!page) {
-      console.warn(`Page not found for metadata: ${params.page}`);
-      return;
+  if (!page) return notFound();
+
+  return {
+    title: page.seo?.title || page.title,
+    description: page.seo?.description || page.bodySummary,
+    openGraph: {
+      publishedTime: page.createdAt,
+      modifiedTime: page.updatedAt,
+      type: 'article'
     }
-
-    return {
-      title: page.seo?.title || page.title,
-      description: page.seo?.description || page.bodySummary,
-      openGraph: {
-        publishedTime: page.createdAt,
-        modifiedTime: page.updatedAt,
-        type: 'article'
-      }
-    };
-  } catch (err) {
-    console.error(`Error generating metadata for: ${params.page}`, err);
-    return;
-  }
+  };
 }
 
-export default async function Page({ params }: PageParams) {
-  try {
-    const page = await getPage(params.page);
+export default async function Page({ params }: { params: { page: string } }) {
+  const page = await getPage(params.page);
 
-    if (!page) {
-      return notFound();
-    }
+  if (!page) return notFound();
 
-    return (
-        <>
-          <h1 className="mb-8 text-5xl font-bold">{page.title}</h1>
-          <Prose className="mb-8" html={page.body as string} />
-          <p className="text-sm italic">
-            {`This document was last updated on ${new Intl.DateTimeFormat(undefined, {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }).format(new Date(page.updatedAt))}.`}
-          </p>
-        </>
-    );
-  } catch (err) {
-    console.error(`Error rendering page: ${params.page}`, err);
-    return notFound();
-  }
+  return (
+      <>
+        <h1 className="mb-8 text-5xl font-bold">{page.title}</h1>
+        <Prose className="mb-8" html={page.body as string} />
+        <p className="text-sm italic">
+          {`This document was last updated on ${new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }).format(new Date(page.updatedAt))}.`}
+        </p>
+      </>
+  );
 }
